@@ -1,0 +1,37 @@
+name: Annotation editor
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-22.04
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: pybossa_test
+          POSTGRES_PASSWORD: pybossa_test
+          POSTGRES_DB: pybossa_annotations
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pybossa_test -d pybossa_annotations"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: pip
+          cache-dependency-path: requirements-annotations-test.txt
+      - run: python -m pip install -r requirements-annotations-test.txt
+      - run: python -m pytest tests_annotations -q
+        env:
+          ANNOTATION_TEST_DATABASE_URL: postgresql://pybossa_test:pybossa_test@localhost:5432/pybossa_annotations

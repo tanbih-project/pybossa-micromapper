@@ -54,3 +54,5 @@ venv/
 venv3
 .venv/
 .venv3/
+.venv-annotations/
+.pytest_cache/

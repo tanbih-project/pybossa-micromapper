@@ -1,0 +1,40 @@
+{% extends "/base.html" %}
+{% set active_page = "projects" %}
+{% block content %}
+<div class="container" style="max-width: 960px; padding-bottom: 40px;">
+  <h1>{{ project.name }}: Edit annotation</h1>
+  <p><a href="{{ url_for('project.details', short_name=project.short_name) }}">Back to project</a></p>
+  <p>Enter an annotation ID to review and edit your saved answer.</p>
+  <form method="get" action="{{ url_for('annotations.find_annotation', short_name=project.short_name) }}" class="form-inline">
+    <div class="form-group">
+      <label for="annotation_id">Annotation ID</label>
+      <input id="annotation_id" name="annotation_id" type="number" min="1" required class="form-control"
+             value="{{ annotation.id if annotation else raw_id }}">
+    </div>
+    <button class="btn btn-default" type="submit">Load annotation</button>
+  </form>
+  {% if error %}<div class="alert alert-danger" role="alert" style="margin-top: 20px;">{{ error }}</div>{% endif %}
+  {% if annotation %}
+  <hr>
+  <h2>Annotation {{ annotation.id }}</h2>
+  <p>Task {{ annotation.task_id }} · Submitted {{ annotation.finish_time }}</p>
+  <p><a href="{{ url_for('project.task_presenter', short_name=project.short_name, task_id=annotation.task_id) }}" target="_blank" rel="noopener">View original task</a></p>
+  <details>
+    <summary>Task data</summary>
+    <pre style="white-space: pre-wrap;">{{ annotation.task.info | tojson(indent=2) }}</pre>
+  </details>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="version" value="{{ version }}">
+    <div class="form-group">
+      <label for="info">Saved answer (JSON)</label>
+      <textarea id="info" name="info" rows="16" class="form-control" required spellcheck="false"
+                aria-describedby="answer-help" style="font-family: monospace;">{{ info_text }}</textarea>
+      <p id="answer-help" class="help-block">Keep the answer's existing JSON structure. Saving replaces this answer and records the previous value in the audit log.</p>
+    </div>
+    <button type="submit" class="btn btn-primary">Save changes</button>
+    <a class="btn btn-default" href="{{ url_for('annotations.edit_annotation', short_name=project.short_name, annotation_id=annotation.id) }}">Reload saved answer</a>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,7 @@
+{% extends "theme/projects/project.html" %}
+{% block projectcontent %}
+{{ super() }}
+{% if current_user.is_authenticated %}
+<p><a class="btn btn-default" href="{{ url_for('annotations.find_annotation', short_name=project.short_name) }}">Edit a saved annotation</a></p>
+{% endif %}
+{% endblock %}

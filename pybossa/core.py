@@ -18,6 +18,7 @@
 """Core module for PYBOSSA."""
 import os
 import logging
+from jinja2 import ChoiceLoader, FileSystemLoader, PrefixLoader
 import humanize
 from flask import Flask, url_for, request, render_template, \
     flash, _app_ctx_stack, abort, redirect, request
@@ -135,6 +136,12 @@ def setup_theme(app):
     theme = app.config['THEME']
     app.template_folder = os.path.join('themes', theme, 'templates')
     app.static_folder = os.path.join('themes', theme, 'static')
+    theme_loader = FileSystemLoader(os.path.join(app.root_path, app.template_folder))
+    app.jinja_loader = ChoiceLoader([
+        FileSystemLoader(os.path.join(app.root_path, 'templates')),
+        PrefixLoader({'theme': theme_loader}),
+        theme_loader,
+    ])
 
 
 def setup_uploader(app):
@@ -298,6 +305,7 @@ def setup_blueprints(app):
     from pybossa.api import blueprint as api
     from pybossa.view.account import blueprint as account
     from pybossa.view.projects import blueprint as projects
+    from pybossa.view.annotations import blueprint as annotations
     from pybossa.view.admin import blueprint as admin
     from pybossa.view.announcements import blueprint as announcements
     from pybossa.view.leaderboard import blueprint as leaderboard
@@ -311,6 +319,7 @@ def setup_blueprints(app):
                   {'handler': api,  'url_prefix': '/api'},
                   {'handler': account, 'url_prefix': '/account'},
                   {'handler': projects, 'url_prefix': '/project'},
+                  {'handler': annotations, 'url_prefix': '/project'},
                   {'handler': admin, 'url_prefix': '/admin'},
                   {'handler': announcements, 'url_prefix': '/announcements'},
                   {'handler': leaderboard, 'url_prefix': '/leaderboard'},

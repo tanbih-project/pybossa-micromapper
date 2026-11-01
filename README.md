@@ -7,6 +7,9 @@
 
 # What is PYBOSSA?
 
+For this fork's annotation editing feature, usage and maintenance instructions,
+see [MICROMAPPER.md](MICROMAPPER.md).
+
 PYBOSSA is a technology built by [Scifabric](https://scifabric.com), for crowdsourcing or citizen science platforms.
 
 PYBOSSA is an extremely flexible and versatile technology with a multitude of applications that

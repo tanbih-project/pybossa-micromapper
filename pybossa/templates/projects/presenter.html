@@ -1,0 +1,8 @@
+{% extends "theme/projects/presenter.html" %}
+{% block content %}
+<input type="hidden" id="pybossa-media-csrf" value="{{ csrf_token() }}">
+{{ super() }}
+{% if current_user.is_authenticated %}
+<div class="container"><p><a href="{{ url_for('annotations.find_annotation', short_name=project.short_name) }}">Edit a saved annotation</a></p></div>
+{% endif %}
+{% endblock %}

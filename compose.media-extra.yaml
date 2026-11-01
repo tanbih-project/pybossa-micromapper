@@ -1,0 +1,17 @@
+# Optional second approved drive. Add its absolute path to .env first.
+x-extra-media: &extra-media
+  type: bind
+  source: '${PYBOSSA_MEDIA_EXTRA_ROOT:?Set an existing drive folder in .env}'
+  target: /data/private-media-extra
+  bind:
+    create_host_path: false
+
+services:
+  init:
+    volumes: [*extra-media]
+  web:
+    volumes: [*extra-media]
+  worker:
+    volumes: [*extra-media]
+  scheduler:
+    volumes: [*extra-media]

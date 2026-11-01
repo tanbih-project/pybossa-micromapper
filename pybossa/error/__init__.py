@@ -39,6 +39,8 @@ class ErrorStatus(object):
     """
 
     error_status = {"BadRequest": 400,
+                    "RequestEntityTooLarge": 413,
+                    "ServiceUnavailable": 503,
                     "Unauthorized": 401,
                     "Forbidden": 403,
                     "NotFound": 404,

@@ -1,0 +1,19 @@
+# Bound the upstream unbounded requirements to compatible Flask/SQLAlchemy APIs.
+SQLAlchemy==1.3.24
+Flask-Babel==1.0.0
+Flask-Cors==3.0.10
+Flask-HTTPAuth==4.4.0
+Flask-Login==0.5.0
+Flask-Mail==0.9.1
+Flask-Misaka==1.0.0
+Flask-Plugins==1.6.1
+Flask-SimpleLDAP==1.4.0
+iiif-prezi==0.3.0
+Pillow==9.5.0
+psycopg2-binary==2.9.9
+pycountry==22.3.5
+python-novaclient==9.1.1
+rackspace-novaclient==2.1
+pbr==5.11.1
+stevedore==1.32.0
+WTForms-Alchemy==0.17.0

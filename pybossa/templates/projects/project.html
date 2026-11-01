@@ -1,0 +1,10 @@
+{% extends "theme/projects/project.html" %}
+{% block projectcontent %}
+{{ super() }}
+{% if current_user.is_authenticated %}
+<p><a class="btn btn-default" href="{{ url_for('annotations.find_annotation', short_name=project.short_name) }}">Edit a saved annotation</a></p>
+{% if current_user.admin or current_user.id in project.owners_ids %}
+<p><a class="btn btn-default" href="{{ url_for('media.manage', short_name=project.short_name) }}">Manage audio and images</a></p>
+{% endif %}
+{% endif %}
+{% endblock %}

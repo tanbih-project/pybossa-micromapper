@@ -19,7 +19,7 @@
 from datetime import datetime
 import math
 import requests
-from flask import current_app, render_template
+from flask import current_app, render_template, has_app_context
 from flask_mail import Message
 from pybossa.core import mail, task_repo, importer, create_app
 from pybossa.model.webhook import Webhook
@@ -390,7 +390,8 @@ def warm_up_stats():  # pragma: no cover
 def warm_cache():  # pragma: no cover
     """Background job to warm cache."""
     from pybossa.core import create_app
-    app = create_app(run_as_server=False)
+    app = (current_app._get_current_object() if has_app_context()
+           else create_app(run_as_server=False))
     projects_cached = []
     import pybossa.cache.projects as cached_projects
     import pybossa.cache.categories as cached_cat

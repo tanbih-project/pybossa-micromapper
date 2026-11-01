@@ -306,6 +306,7 @@ def setup_blueprints(app):
     from pybossa.view.account import blueprint as account
     from pybossa.view.projects import blueprint as projects
     from pybossa.view.annotations import blueprint as annotations
+    from pybossa.view.media import blueprint as media
     from pybossa.view.admin import blueprint as admin
     from pybossa.view.announcements import blueprint as announcements
     from pybossa.view.leaderboard import blueprint as leaderboard
@@ -320,6 +321,7 @@ def setup_blueprints(app):
                   {'handler': account, 'url_prefix': '/account'},
                   {'handler': projects, 'url_prefix': '/project'},
                   {'handler': annotations, 'url_prefix': '/project'},
+                  {'handler': media, 'url_prefix': ''},
                   {'handler': admin, 'url_prefix': '/admin'},
                   {'handler': announcements, 'url_prefix': '/announcements'},
                   {'handler': leaderboard, 'url_prefix': '/leaderboard'},

@@ -58,7 +58,7 @@ def save_annotation(session, project, annotation_id, user, info, version):
         old_info = copy.deepcopy(annotation.info)
         # Uploaded-file metadata is managed by the upload API, not this editor.
         if isinstance(old_info, dict):
-            for key in ('container', 'file_name'):
+            for key in ('container', 'file_name', 'media_asset_id', 'media_storage'):
                 if key in old_info and (not isinstance(info, dict) or
                                          info.get(key) != old_info[key]):
                     raise BadRequest('Uploaded-file metadata must be preserved.')

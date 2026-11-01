@@ -1,0 +1,61 @@
+{% extends '/base.html' %}
+{% set active_page = 'projects' %}
+{% block content %}
+<div class="container" style="padding-bottom:40px;">
+  <h1>{{ project.name }}: Audio and images</h1>
+  <p><a href="{{ url_for('project.details', short_name=project.short_name) }}">Back to project</a></p>
+  {% if error %}<p class="alert alert-danger" role="alert">{{ error }}</p>{% endif %}
+  <p>Source audio and images require sign-in and access to this project. Recordings are available to their author and project managers.</p>
+  <dl><dt>New recordings</dt><dd><code>{{ recording_location }}</code></dd>
+      <dt>Source audio and images</dt><dd><code>{{ source_location }}</code></dd></dl>
+  {% if current_user.admin %}
+  <details><summary>Change storage locations for this project</summary>
+    <form method="post" class="well" style="margin-top:15px;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="storage">
+      <div class="form-group"><label for="root_key">Recording drive</label>
+        <select class="form-control" id="root_key" name="root_key">
+        {% for key, root in roots.items() %}{% if not root.get('read_only') %}
+          <option value="{{ key }}" {% if key == config.root_key %}selected{% endif %}>{{ root.get('display_path', root.path) }}</option>
+        {% endif %}{% endfor %}</select></div>
+      <div class="form-group"><label for="directory">Recording project folder (relative to drive)</label>
+        <input class="form-control" id="directory" name="directory" value="{{ config.directory }}" required></div>
+      <div class="form-group"><label for="source_root_key">Source drive</label>
+        <select class="form-control" id="source_root_key" name="source_root_key">
+        {% for key, root in roots.items() %}<option value="{{ key }}" {% if key == config.source_root_key %}selected{% endif %}>{{ root.get('display_path', root.path) }}</option>{% endfor %}</select></div>
+      <div class="form-group"><label for="source_directory">Source folder (relative to drive)</label>
+        <input class="form-control" id="source_directory" name="source_directory" value="{{ config.source_directory }}" required></div>
+      <p>Changes apply to new files. Existing media links keep working at their original locations. Server administrators approve available drives.</p>
+      <button type="submit" class="btn btn-primary">Save storage locations</button>
+    </form>
+  </details>
+  {% endif %}
+  <h2>Add source audio or images</h2>
+  <form method="post" enctype="multipart/form-data" class="well">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="upload">
+    <div class="form-group"><label for="file">Audio file or raster image</label>
+      <input id="file" name="file" type="file" accept="audio/*,image/jpeg,image/png,image/webp,image/gif" required></div>
+    <p>WAV, MP3, Ogg, FLAC, WebM, M4A, JPEG, PNG, WebP and GIF. Maximum 256 MB per file by default.</p>
+    <button type="submit" class="btn btn-primary">Upload source file</button>
+  </form>
+  <h2>Use a file already on disk</h2>
+  <form method="post" class="well">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="register">
+    <div class="form-group"><label for="filename">File path relative to the source folder</label>
+      <input id="filename" name="filename" class="form-control" placeholder="session_01/speaker_01.wav" required></div>
+    <p>The file stays on disk. A private media URL is registered for use in task audio and image fields.</p>
+    <button type="submit" class="btn btn-default">Register existing file</button>
+  </form>
+  <h2>Media links</h2>
+  <p>Copy a source media URL into a task's audio or image URL field. Links require a signed-in session; do not add API keys to URLs.</p>
+  <div class="table-responsive"><table class="table table-striped">
+    <thead><tr><th>File</th><th>Category</th><th>Bytes</th><th>Private URL</th></tr></thead>
+    <tbody>{% for asset in assets %}<tr><td>{{ asset.original_name }}</td><td>{{ asset.kind }}</td><td>{{ asset.size }}</td>
+      <td><a href="{{ asset_url(asset) }}" target="_blank" rel="noopener noreferrer">{{ asset_url(asset) }}</a></td></tr>
+    {% else %}<tr><td colspan="4">No media files registered yet.</td></tr>{% endfor %}</tbody>
+  </table></div>
+  <p>Showing the most recent 200 files. Files are stored outside the public uploads directory.</p>
+</div>
+{% endblock %}

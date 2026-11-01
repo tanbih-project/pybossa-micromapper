@@ -332,12 +332,14 @@ class APIBase(MethodView):
             if (cls_name == 'TaskRun'
                     and 'multipart/form-data' in content_type
                     and data):
-                uploader.delete_file(data['info']['file_name'],
-                                     data['info']['container'])
+                self._cleanup_failed_upload(data)
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
                 action='POST')
+
+    def _cleanup_failed_upload(self, data):
+        uploader.delete_file(data['info']['file_name'], data['info']['container'])
 
     def _create_instance_from_request(self, data):
         data = self.hateoas.remove_links(data)

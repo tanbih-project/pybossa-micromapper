@@ -6,6 +6,15 @@ It is based on `Scifabric/pybossa` master at
 default-branch head when cloned on 1 November 2026. The upstream dependency
 stack has not been modernized in this change.
 
+## Run locally with Docker
+
+See [docker/README.md](docker/README.md) for the Docker Desktop deployment,
+administrator login, persistent data, and start/stop commands. The default local
+address is `http://localhost:8085`.
+
+For per-project recording drives, private audio/image URLs, existing source
+folders and symlinks, see [MEDIA_STORAGE.md](MEDIA_STORAGE.md).
+
 ## Edit an annotation
 
 1. Sign in and open the project's information page or contribution page.
@@ -75,18 +84,20 @@ to extend the selected theme. Custom themes that replace the standard
 git clone --recurse-submodules git@github.com:tanbih-project/pybossa-micromapper.git
 cd pybossa-micromapper
 git remote add upstream https://github.com/Scifabric/pybossa.git
-git checkout codex/edit-project-annotations
+git checkout codex/private-project-media
 ```
 
 `origin` is the organization fork; `upstream` is Scifabric. The fork's `master`
-branch initially matches upstream. The annotation implementation is maintained
-on `codex/edit-project-annotations` for review and testing before merging.
+branch initially matches upstream. The complete local implementation (annotation
+editing, Docker deployment and private media) is maintained on
+`codex/private-project-media` for review before merging. The earlier
+`codex/edit-project-annotations` branch contains the annotation editor alone.
 
 To bring future upstream changes into the customization branch:
 
 ```bash
 git fetch upstream
-git checkout codex/edit-project-annotations
+git checkout codex/private-project-media
 git merge upstream/master
 git submodule update --init --recursive
 ```

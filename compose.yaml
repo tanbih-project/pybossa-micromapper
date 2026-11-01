@@ -1,0 +1,79 @@
+name: pybossa-micromapper
+
+x-app: &app
+  image: pybossa-micromapper:local
+  platform: linux/amd64
+  build: .
+  env_file: .env
+  group_add:
+    - '${PYBOSSA_MEDIA_GID:-1000}'
+  volumes:
+    - uploads:/app/uploads
+    - type: bind
+      source: '${PYBOSSA_MEDIA_ROOT:?Run python3 docker/setup.py first}'
+      target: /data/private-media
+      bind:
+        create_host_path: false
+  init: true
+  restart: unless-stopped
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: pybossa
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run python3 docker/setup.py first}
+      POSTGRES_DB: pybossa
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U pybossa -d pybossa']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    command: [redis-server, --appendonly, 'yes']
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  init:
+    <<: *app
+    command: [python, -m, docker.bootstrap]
+    restart: 'no'
+    depends_on:
+      db: {condition: service_healthy}
+      redis: {condition: service_healthy}
+  web:
+    <<: *app
+    ports:
+      - '127.0.0.1:${PYBOSSA_PORT:-8085}:5000'
+    depends_on:
+      init: {condition: service_completed_successfully}
+    healthcheck:
+      test: [CMD, curl, --fail, --silent, --header, 'Host: ${PYBOSSA_SERVER_NAME:-localhost:8085}', 'http://127.0.0.1:5000/']
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+  worker:
+    <<: *app
+    command: [python, app_context_rqworker.py, scheduled_jobs, super, high, medium, low, email, maintenance, monthly, bimonthly, quaterly, default, webpush]
+    depends_on:
+      init: {condition: service_completed_successfully}
+  scheduler:
+    <<: *app
+    command: [rqscheduler, --host, redis, --port, '6379', --interval, '30', --db, '0']
+    depends_on:
+      init: {condition: service_completed_successfully}
+
+volumes:
+  postgres:
+  redis:
+  uploads:

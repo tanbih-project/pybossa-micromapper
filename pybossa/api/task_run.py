@@ -46,6 +46,24 @@ class TaskRunAPI(APIBase):
     __class__ = TaskRun
     reserved_keys = set(['id', 'created', 'finish_time'])
 
+    def _create_instance_from_request(self, data):
+        inst = super(TaskRunAPI, self)._create_instance_from_request(data)
+        asset = getattr(self, '_private_media_upload', None)
+        if asset is not None:
+            from pybossa.core import db
+            db.session.add(inst)
+            db.session.flush()
+            asset.task_run_id = inst.id
+        return inst
+
+    def _cleanup_failed_upload(self, data):
+        asset = getattr(self, '_private_media_upload', None)
+        if asset is not None:
+            from pybossa.media_storage import cleanup_failed_upload
+            cleanup_failed_upload(asset)
+        else:
+            super(TaskRunAPI, self)._cleanup_failed_upload(data)
+
     def check_can_post(self, project_id, task_id, user_ip_or_id):
         if not can_post(project_id, task_id, user_ip_or_id):
             raise Forbidden("You must request a task first!")
@@ -107,6 +125,38 @@ class TaskRunAPI(APIBase):
         if request_headers is None:
             request_headers = []
         if (content_type in request_headers and
+                current_app.config.get('TASKRUN_PRIVATE_MEDIA', True)):
+            from pybossa.view.media import project_access, upload_authentication
+            from pybossa.media_storage import save_upload, asset_url
+            if request.method != 'POST':
+                raise BadRequest('Replace annotation answers through the editor; recording replacement is not supported.')
+            upload_authentication()
+            try:
+                project_id = int(request.form['project_id'])
+                task_id = int(request.form['task_id'])
+                info = json.loads(request.form.get('info', '{}'))
+            except (KeyError, TypeError, ValueError):
+                raise BadRequest('Valid project_id, task_id and JSON info are required.')
+            if not isinstance(info, dict):
+                raise BadRequest('A recorded annotation requires a JSON object for info.')
+            project = project_repo.get(project_id)
+            project_access(project)
+            inst = TaskRun(project_id=project_id, task_id=task_id)
+            self._add_user_info(inst)
+            ensure_authorized_to('create', inst)
+            task = task_repo.get_task(task_id)
+            self._validate_project_and_task(inst, task)
+            self.check_can_post(project_id, task_id, get_user_id_or_ip())
+            self._ensure_task_was_requested(task, ContributionsGuard(sentinel.master))
+            file = request.files.get('file')
+            if file is None:
+                raise BadRequest('A media file is required.')
+            asset = save_upload(project, current_user, file, 'recording')
+            self._private_media_upload = asset
+            info.update(media_asset_id=asset.id, media_storage='private')
+            return dict(project_id=project_id, task_id=task_id, info=info,
+                        media_url=asset_url(asset))
+        if (content_type in request_headers and
                 cls_name in self.allowed_classes_upload):
             data = dict()
             for key in list(request.form.keys()):
@@ -150,6 +200,10 @@ class TaskRunAPI(APIBase):
     def _file_delete(self, request, obj):
         """Delete file object."""
         cls_name = self.__class__.__name__.lower()
+        if isinstance(obj.info, dict) and obj.info.get('media_storage') == 'private':
+            # The asset registry is revoked by the task_run foreign-key cascade.
+            # Keep physical originals for explicit retention/backup management.
+            return
         if cls_name in self.allowed_classes_upload:
             if type(obj.info) == dict:
                 keys = list(obj.info.keys())
